@@ -1,0 +1,45 @@
+
+#panel{
+	position: absolute;
+	z-index: 100;
+	left: 20px;top:20px;
+	width: 400px;
+	height: 350px;
+	box-shadow: 0 0 1px 1px #ddd;
+}
+
+#panel2{
+	position: absolute;
+	z-index: 100;
+	left: 500px;
+	top:20px;
+	width: 400px;
+	height: 350px;
+	box-shadow: 0 0 1px 1px #ddd;
+}
+
+#form{
+	position: absolute;
+	left: 300px;
+	top: 450px;
+}
+
+input{
+	outline: none;
+	box-sizing:border-box;
+}
+
+input[type="text"]{
+	padding:0 5px;
+	width: 160px;
+	height: 30px;
+	border:1px solid #ddd;
+}
+input[type="submit"]{
+	padding:0 15px;
+	height: 30px;
+	border:1px solid #ddd;
+	color:#333;
+	background-color: #fff;
+	cursor: pointer;
+}

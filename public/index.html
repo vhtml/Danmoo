@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>神奇的弹幕效果</title>
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/styles/core.css">
+</head>
+<body>
+	<div id="panel"></div>
+	<div id="panel2"></div>
+
+	<form id="form">
+		<input type="text" id="input">
+		<input type="submit" value="发送">
+	</form>
+	
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/scripts/danmoo.js"></script>
+	<script>
+
+		var danmoo = new Danmoo({
+			container: document.getElementById('panel')
+		}).start();
+
+		var danmoo2 = new Danmoo({
+			container: document.getElementById('panel2')
+		}).start().runScreensaver('T');
+
+		var socket = io();
+		socket.on('barrage', function(msg){
+			danmoo.emit(msg);
+		});
+
+		form.addEventListener('submit', function(e){
+			socket.emit('barrage', input.value.trim());
+			input.value = '';
+			e.preventDefault();
+		});
+
+	</script>
+</body>
+</html>
