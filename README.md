@@ -1,10 +1,11 @@
 # Danmoo
 神奇的弹幕效果
 
-
+```bash
 	cd Danmoo
 	npm install
 	node .
+```
 
 在浏览器中打开`http://localhost:8090/`。
 
