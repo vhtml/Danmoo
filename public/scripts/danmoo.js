@@ -56,7 +56,9 @@
 			colors: COLORS,
 			showColors: SHADOW_COLORS,
 			fontFamily: FONT_FAMILY,
-			fontWeight: FONT_WEIGHT
+			fontWeight: FONT_WEIGHT,
+			fontSizes: [16, 30],
+			fontSizeBig: 100
 		}, config);
 
 		this.lh = this.config.lh;
@@ -191,12 +193,12 @@
 		var showColors = config.showColors;
 		var fontFamilys = config.fontFamily;
 		var fontWeights = config.fontWeight;
-
+		var fontSizes = config.fontSizes;
 
 		var fontWeight = fontWeights.sort(_shuffleFn)[_rnd(0, fontWeights.length)];
-		var fontSize = _rnd(16, 30);
+		var fontSize = _rnd(fontSizes[0], fontSizes[1]);
 		if (msg.length < 3 && Math.random() < 0.1) {
-			fontSize = 100;
+			fontSize = config.fontSizeBig;
 		}
 		var fontFamily = fontFamilys.sort(_shuffleFn)[_rnd(0, fontFamilys.length)];
 

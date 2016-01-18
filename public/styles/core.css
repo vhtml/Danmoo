@@ -1,32 +1,28 @@
 
 #panel{
-	position: absolute;
-	z-index: 100;
-	left: 20px;top:20px;
+	float:left;
 	width: 400px;
 	height: 350px;
 	box-shadow: 0 0 1px 1px #ddd;
 }
 
 #panel2{
-	position: absolute;
-	z-index: 100;
-	left: 500px;
-	top:20px;
+	float: left;
+	margin-left: 30px;
 	width: 400px;
 	height: 350px;
 	box-shadow: 0 0 1px 1px #ddd;
 }
 
 #form{
-	position: absolute;
-	left: 300px;
-	top: 450px;
+	padding-top: 30px;
+	clear: both;
 }
 
 input{
 	outline: none;
 	box-sizing:border-box;
+	vertical-align: middle;
 }
 
 input[type="text"]{
@@ -35,7 +31,7 @@ input[type="text"]{
 	height: 30px;
 	border:1px solid #ddd;
 }
-input[type="submit"]{
+input[type="submit"],input[type="button"]{
 	padding:0 15px;
 	height: 30px;
 	border:1px solid #ddd;
