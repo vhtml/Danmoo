@@ -58,7 +58,8 @@
 			fontFamily: FONT_FAMILY,
 			fontWeight: FONT_WEIGHT,
 			fontSizes: [16, 30],
-			fontSizeBig: 100
+			fontSizeBig: 100,
+			imgMaxSizes: [200, 200]
 		}, config);
 
 		this.lh = this.config.lh;
@@ -189,6 +190,7 @@
 		if (!(this instanceof Barrage)) {
 			return new Barrage(msg);
 		}
+		var _this = this;
 		var colors = config.colors;
 		var showColors = config.showColors;
 		var fontFamilys = config.fontFamily;
@@ -206,30 +208,48 @@
 
 		this.color = colors.sort(_shuffleFn)[_rnd(0, colors.length)];
 		this.shadowColor = showColors.sort(_shuffleFn)[_rnd(0, showColors.length)];
-		this.speed = msg.length * (fontSize / 12); //默认速度
-		this.msg = msg;
+		this.speed = Math.min(msg.length, 30) * (fontSize / 12); //默认速度
+		this.w = 0; //默认宽度
 		//初始值，具体需要根据情况计算
 		this.x = 0;
 		this.y = _rnd(0, 20);
-		this.w = 0;
 
 		this._timer = this._rafId = null;
 
-		this.move();
+		if (msg.indexOf('data:image') > -1) {
+			this.img = new Image();
+			this.imgMaxSizes = config.imgMaxSizes;
+			this.img.onload = function() {
+				_this.ready = true;
+				var s = this.width / this.height;
+				_this.w = Math.min(this.width, _this.imgMaxSizes[0]);
+				_this.h = Math.min(_this.w / s, _this.imgMaxSizes[1]);
+				_this.w = _this.h * s;
+
+
+				_this.speed = Math.pow(_this.w + _this.h, 1 / 3) * 0.6;
+				_this.move();
+			};
+			this.img.src = msg;
+		} else {
+			this.msg = msg;
+			this.move();
+		}
+
 	}
 
 	Barrage.prototype.move = function() {
 		var _this = this;
 		this.suspend();
 		//文字走动
-		this.timer = setTimeout(function moveText() {
+		this.timer = setTimeout(function moveObj() {
 			_this.x -= _this.speed;
 			//判断是否走出画布左边
 			if (_this.x + _this.w < -10) {
 				_this.isOut = true; //打上出局标记
 			}
 			if (!_this.isOut) {
-				_this._rafId = _RAF(moveText);
+				_this._rafId = _RAF(moveObj);
 			}
 		}, 30);
 	};
@@ -242,17 +262,25 @@
 	Barrage.prototype.draw = function(gd) {
 		gd.save();
 
-		gd.font = this.font;
-		gd.fillStyle = this.color;
-		gd.shadowOffsetX = 1;
-		gd.shadowOffsetY = 1;
-		gd.shadowColor = this.shadowColor;
-		gd.textBaseline = 'top';
-		gd.fillText(this.msg, this.x, this.y);
+		if (this.img) {
+			if (this.ready) {
+				gd.globalAlpha = 0.9;
+				gd.drawImage(this.img, this.x, this.y, this.w, this.h);
+			}
 
-		if (this.w <= 0) { //只有在画布环境下才能确定文字尺寸
-			this.w = gd.measureText(this.msg).width;
-			this.speed = Math.pow(this.w, 1 / 3) * 0.6;
+		} else if (this.msg) {
+			gd.font = this.font;
+			gd.fillStyle = this.color;
+			gd.shadowOffsetX = 1;
+			gd.shadowOffsetY = 1;
+			gd.shadowColor = this.shadowColor;
+			gd.textBaseline = 'top';
+			gd.fillText(this.msg, this.x, this.y);
+
+			if (this.w <= 0) { //只有在画布环境下才能确定文字尺寸
+				this.w = gd.measureText(this.msg).width;
+				this.speed = Math.pow(this.w, 1 / 3) * 0.6;
+			}
 		}
 
 		gd.restore();

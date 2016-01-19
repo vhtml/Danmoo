@@ -21,9 +21,15 @@ io.on('connection', function(socket) {
 	});
 
 	socket.on('barrage', function(msg) {
-		console.log(msg + ' ---- ' + socket.handshake.headers['user-agent']);
-		if(msg.trim().length > 0){
-			io.emit('barrage', msg.substring(0,30));
+		if (msg.indexOf('data:image') > -1) {
+			console.log('data:image' + ' ---- ' + socket.handshake.headers['user-agent']);
+			io.emit('barrage', msg);
+		} else {
+			console.log(msg + ' ---- ' + socket.handshake.headers['user-agent']);
+			if (msg.trim().length > 0) {
+				io.emit('barrage', msg.substring(0, 30));
+			}
 		}
+
 	});
 });

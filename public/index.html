@@ -10,14 +10,23 @@
 	<div id="panel"></div>
 	<div id="panel2"></div>
 
-	<form id="form">
+	<form id="text-form" class="form">
 		<input type="text" id="input">
-		<input type="submit" value="发送">
+		<input type="submit" value="文字发送">
+	</form>
+
+	<form id="file-form" class="form">
+		<span class="filebox">
+			图片发送
+			<input type="file" id="file" class="file" accept="image/*">
+		</span>
 	</form>
 	
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/scripts/danmoo.js"></script>
 	<script>
+		var textForm = document.getElementById('text-form');
+		var fileForm = document.getElementById('file-form');
 
 		var danmoo = new Danmoo({
 			container: document.getElementById('panel')
@@ -25,19 +34,31 @@
 
 		var danmoo2 = new Danmoo({
 			container: document.getElementById('panel2')
-		}).start().runScreensaver('T');
+		}).start();
 
 		var socket = io();
 		socket.on('barrage', function(msg){
 			danmoo.emit(msg);
 		});
 
-		form.addEventListener('submit', function(e){
+		textForm.addEventListener('submit', function(e){
 			socket.emit('barrage', input.value.trim());
 			input.value = '';
 			e.preventDefault();
 		});
-
+		var fileInput = document.getElementById('file');
+		fileInput.addEventListener('change', function(){
+			var file = this.files[0], self = this;
+			if(!/image\/\w+/.test(file.type)){   
+                return false;
+        	} 
+        	var reader = new FileReader();
+        	reader.readAsDataURL(file);
+        	reader.onload = function(){
+        		socket.emit('barrage', this.result);
+        		self.value = '';
+        	};
+		});
 	</script>
 </body>
 </html>
