@@ -34,7 +34,7 @@
 
 		var danmoo2 = new Danmoo({
 			container: document.getElementById('panel2')
-		}).start();
+		}).start().runScreensaver('O');
 
 		var socket = io();
 		socket.on('barrage', function(msg){
