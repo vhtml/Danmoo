@@ -1,4 +1,9 @@
-(function(exports) {
+/*
+author: 歪闹
+github: https://github.com/vhtml
+*/
+
+;(function(exports) {
 
 	var _RAF = requestAnimationFrame;
 	var _CAF = cancelAnimationFrame;
@@ -132,19 +137,20 @@
 		this.gd.clearRect(0, 0, this.canvas.width, this.canvas.height);
 	};
 
-	Danmoo.prototype.runScreensaver = function(msg) {
-		if (this.state === 2) return;
+	Danmoo.prototype.runScreensaver = function(msg, duration) {
+		if (this.state === 2) return this;
+		duration = duration || 200;
 		this.pools = [];
 		this.state = 2;
 		var _this = this;
-		if (this.state === 2) {
-			(function run() {
+		(function run() {
+			if (_this.state === 2) {
 				_this.emit(msg);
 				setTimeout(function() {
 					run();
-				}, 180);
-			})();
-		}
+				}, duration);
+			}
+		})();
 		return this;
 	};
 
