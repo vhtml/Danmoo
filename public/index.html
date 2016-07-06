@@ -55,8 +55,16 @@
         	var reader = new FileReader();
         	reader.readAsDataURL(file);
         	reader.onload = function(){
-        		socket.emit('barrage', this.result);
-        		self.value = '';
+        		var img = new Image();
+        		img.onload = function(){
+        			var canvas = document.createElement('canvas');
+        			var ctx = canvas.getContext('2d');
+        			canvas.width = Math.min(this.width, 400);
+        			canvas.height = canvas.width/this.width * this.height;
+        			ctx.drawImage(img, 0, 0, this.width, this.height, 0, 0, canvas.width, canvas.height);
+        			socket.emit('barrage', canvas.toDataURL());
+        		};
+        		img.src = this.result;
         	};
 		});
 	</script>
