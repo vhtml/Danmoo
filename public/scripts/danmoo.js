@@ -1,298 +1,287 @@
-/*
-author: 歪闹
-github: https://github.com/vhtml
-*/
+/**
+ * author: 歪闹
+ * github: https://github.com/vhtml
+ */
 
-;(function(exports) {
+;(function (exports) {
+  var _RAF = requestAnimationFrame
+  var _CAF = cancelAnimationFrame
+  var doc = exports.document
 
-	var _RAF = requestAnimationFrame;
-	var _CAF = cancelAnimationFrame;
-	var doc = exports.document;
+  var _rnd = function (m, n) {
+    return Math.floor(m + Math.random() * (n - m))
+  }
+  var _shuffleFn = function () {
+    return Math.random() - 0.5
+  }
+  var _extend = function (o, o1) {
+    if (typeof o1 === 'object') {
+      for (var i in o) {
+        o[i] = o1[i] || o[i]
+      }
+      return o
+    }
+    return o
+  }
+  var _optimize = function (dm) {
+    doc.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        dm.suspend()
+      } else {
+        dm.start()
+      }
+    })
+  }
 
-	var _rnd = function(m, n) {
-		return Math.floor(m + Math.random() * (n - m));
-	};
-	var _shuffleFn = function() {
-		return Math.random() - 0.5;
-	};
-	var _extend = function(o, o1) {
-		if (typeof o1 === 'object') {
-			for (var i in o) {
-				o[i] = o1[i] || o[i];
-			}
-			return o;
-		}
-		return o;
-	};
-	var _optimize = function(dm) {
-		doc.addEventListener('visibilitychange', function() {
-			if (document.hidden) {
-				dm.suspend();
-			} else {
-				dm.start();
-			}
-		});
-	};
+  var COLORS = [
+    '#333', '#e21400', '#333', '#91580f', '#333', '#f8a700', '#333', '#f78b00',
+    '#333', '#58dc00', '#333', '#287b00', '#333', '#a8f07a', '#333', '#4ae8c4',
+    '#333', '#3b88eb', '#333', '#3824aa', '#333', '#a700ff', '#333', '#d300e7'
+  ]
+  var SHADOW_COLORS = [
+    '#fff', '#e21400', '#fff', '#91580f', '#fff', '#f8a700', '#fff', '#f78b00',
+    '#fff', '#58dc00', '#fff', '#287b00', '#fff', '#a8f07a', '#fff', '#4ae8c4',
+    '#fff', '#3b88eb', '#fff', '#3824aa', '#fff', '#a700ff', '#fff', '#d300e7'
+  ]
+  var FONT_FAMILY = [
+    'Arial', 'Helvetica', 'Helvetica Neue', 'STHeiTi', 'sans-serif', 'Verdana', '宋体'
+  ]
+  var FONT_WEIGHT = ['normal', 'normal', 'normal', 'bold', 'bolder', 'lighter']
 
-	var COLORS = [
-		'#333', '#e21400', '#333', '#91580f', '#333', '#f8a700', '#333', '#f78b00',
-		'#333', '#58dc00', '#333', '#287b00', '#333', '#a8f07a', '#333', '#4ae8c4',
-		'#333', '#3b88eb', '#333', '#3824aa', '#333', '#a700ff', '#333', '#d300e7'
-	];
-	var SHADOW_COLORS = [
-		'#fff', '#e21400', '#fff', '#91580f', '#fff', '#f8a700', '#fff', '#f78b00',
-		'#fff', '#58dc00', '#fff', '#287b00', '#fff', '#a8f07a', '#fff', '#4ae8c4',
-		'#fff', '#3b88eb', '#fff', '#3824aa', '#fff', '#a700ff', '#fff', '#d300e7'
-	];
-	var FONT_FAMILY = [
-		'Arial', 'Helvetica', 'Helvetica Neue', 'STHeiTi', 'sans-serif', 'Verdana', '宋体'
-	];
-	var FONT_WEIGHT = ['normal', 'normal', 'normal', 'bold', 'bolder', 'lighter'];
+  var Danmoo = function (config) {
+    if (!(this instanceof Danmoo)) {
+      return new Danmoo(config)
+    }
+    this.config = _extend({
+      container: doc.body,
+      lh: 40,
+      gap: 80,
+      colors: COLORS,
+      showColors: SHADOW_COLORS,
+      fontFamily: FONT_FAMILY,
+      fontWeight: FONT_WEIGHT,
+      fontSizes: [16, 30],
+      fontSizeBig: 100,
+      imgMaxSizes: [200, 200]
+    }, config)
 
+    this.lh = this.config.lh
+    this.gap = this.config.gap
+    this.container = this.config.container
 
-	var Danmoo = function(config) {
-		if (!(this instanceof Danmoo)) {
-			return new Danmoo(msg, config);
-		}
-		this.config = _extend({
-			container: doc.body,
-			lh: 40,
-			gap: 80,
-			colors: COLORS,
-			showColors: SHADOW_COLORS,
-			fontFamily: FONT_FAMILY,
-			fontWeight: FONT_WEIGHT,
-			fontSizes: [16, 30],
-			fontSizeBig: 100,
-			imgMaxSizes: [200, 200]
-		}, config);
+    var canvas = doc.createElement('canvas')
+    canvas.width = this.container.offsetWidth
+    canvas.height = this.container.offsetHeight
+    this.container.appendChild(canvas)
+    this.canvas = canvas
+    this.gd = canvas.getContext('2d')
+    this.rows = Math.floor(canvas.height / this.lh)
 
-		this.lh = this.config.lh;
-		this.gap = this.config.gap;
-		this.container = this.config.container;
+    this.lastBarr = null
+    this.lastGroupFirstBarr = null
+    this.pools = []
 
-		var canvas = doc.createElement('canvas');
-		canvas.width = this.container.offsetWidth;
-		canvas.height = this.container.offsetHeight;
-		this.container.appendChild(canvas);
-		this.canvas = canvas;
-		this.gd = canvas.getContext('2d');
-		this.rows = Math.floor(canvas.height / this.lh);
+    this.state = 0 // 启动状态
+    this._rafId = null
 
-		this.lastBarr = null;
-		this.lastGroupFirstBarr = null;
-		this.pools = [];
+    _optimize(this) // 优化动画
+  }
 
-		this.state = 0; //启动状态
-		this._rafId = null;
+  Danmoo.version = '1.0.0'
 
-		_optimize(this); //优化动画
-	};
+  Danmoo.prototype.start = function () {
+    var _this = this
+    _CAF(this._rafId)
+    for (var i = 0, len = this.pools.length; i < len; i++) {
+      this.pools[i].move()
+    }
+    this.state = 1
+    ;(function anim () {
+      if (_this.state !== 0) {
+        _this._rafId = _RAF(anim)
+        _this.clear()
+        // 画弹幕
+        var i
+        for (i = 0; i < _this.pools.length; i++) {
+          _this.pools[i].draw(_this.gd)
+        }
+        // 清除出局的弹幕
+        for (i = 0; i < _this.pools.length; i++) {
+          if (_this.pools[i].isOut) {
+            _this.pools.splice(i, 1)
+          }
+        }
+      }
+    })()
+    return this
+  }
 
-	Danmoo.version = '1.0.0';
+  Danmoo.prototype.stop = function () {
+    this.state = 0
+    this.clear()
+    this.pools = []
+    return this
+  }
 
-	Danmoo.prototype.start = function() {
-		var _this = this;
-		_CAF(this._rafId);
-		for (var i = 0, len = this.pools.length; i < len; i++) {
-			this.pools[i].move();
-		}
-		this.state = 1;
-		(function anim() {
-			if (_this.state !== 0) {
-				_this._rafId = _RAF(anim);
-				_this.clear();
-				//画弹幕
-				var i;
-				for (i = 0; i < _this.pools.length; i++) {
-					_this.pools[i].draw(_this.gd);
-				}
-				//清除出局的弹幕
-				for (i = 0; i < _this.pools.length; i++) {
-					if (_this.pools[i].isOut) {
-						_this.pools.splice(i, 1);
-					}
-				}
-			}
-		})();
-		return this;
-	};
+  Danmoo.prototype.suspend = function () {
+    this.state = 0
+    for (var i = 0, len = this.pools.length; i < len; i++) {
+      this.pools[i].suspend()
+    }
+    return this
+  }
 
-	Danmoo.prototype.stop = function() {
-		this.state = 0;
-		this.clear();
-		this.pools = [];
-		return this;
-	};
+  Danmoo.prototype.clear = function () {
+    this.gd.clearRect(0, 0, this.canvas.width, this.canvas.height)
+  }
 
-	Danmoo.prototype.suspend = function() {
-		this.state = 0;
-		for (var i = 0, len = this.pools.length; i < len; i++) {
-			this.pools[i].suspend();
-		}
-		return this;
-	};
+  Danmoo.prototype.runScreensaver = function (msg, duration) {
+    if (this.state === 2) return this
+    duration = duration || 200
+    this.pools = []
+    this.state = 2
+    var _this = this
+    ;(function run () {
+      if (_this.state === 2) {
+        _this.emit(msg)
+        setTimeout(function () {
+          run()
+        }, duration)
+      }
+    })()
+    return this
+  }
 
-	Danmoo.prototype.clear = function() {
-		this.gd.clearRect(0, 0, this.canvas.width, this.canvas.height);
-	};
+  Danmoo.prototype.emit = function (msg) {
+    if (this.state === 0) return
+    var barr = new Barrage(msg, this.config)
+    this.lastBarr = this.pools[this.pools.length - 1]
+    if (!this.lastBarr) {
+      barr.row = 1 // 第一行
+      barr.x = this.canvas.width
+      barr.y += this.lh * (barr.row - 1)
+      this.lastGroupFirstBarr = barr
+    } else {
+      if (this.lastGroupFirstBarr.x + this.lastGroupFirstBarr.w + this.gap > this.canvas.width) { // 如果当前列第一行超画布范围
+        barr.row = this.lastBarr.row + 1
+        if (barr.row > this.rows) { // 如果大于最大行数
+          // 另起一列
+          barr.row = 1
+          barr.x = this.canvas.width
+          barr.y += this.lh * (barr.row - 1)
+          this.lastGroupFirstBarr = barr
+        } else {
+          // 将新生成的放在前一个的下一行
+          barr.x = this.canvas.width
+          barr.y += this.lh * (barr.row - 1)
+        }
+      } else {
+        // 另起一列
+        barr.row = 1
+        barr.x = this.canvas.width
+        barr.y += this.lh * (barr.row - 1)
+        this.lastGroupFirstBarr = barr
+      }
+    }
+    this.pools.push(barr)
+  }
 
-	Danmoo.prototype.runScreensaver = function(msg, duration) {
-		if (this.state === 2) return this;
-		duration = duration || 200;
-		this.pools = [];
-		this.state = 2;
-		var _this = this;
-		(function run() {
-			if (_this.state === 2) {
-				_this.emit(msg);
-				setTimeout(function() {
-					run();
-				}, duration);
-			}
-		})();
-		return this;
-	};
+  function Barrage (msg, config) {
+    if (!(this instanceof Barrage)) {
+      return new Barrage(msg)
+    }
+    var _this = this
+    var colors = config.colors
+    var showColors = config.showColors
+    var fontFamilys = config.fontFamily
+    var fontWeights = config.fontWeight
+    var fontSizes = config.fontSizes
 
+    var fontWeight = fontWeights.sort(_shuffleFn)[_rnd(0, fontWeights.length)]
+    var fontSize = _rnd(fontSizes[0], fontSizes[1])
+    if (msg.length < 3 && Math.random() < 0.1) {
+      fontSize = config.fontSizeBig
+    }
+    var fontFamily = fontFamilys.sort(_shuffleFn)[_rnd(0, fontFamilys.length)]
 
-	Danmoo.prototype.emit = function(msg) {
-		if (this.state === 0) return;
-		var barr = new Barrage(msg, this.config);
-		this.lastBarr = this.pools[this.pools.length - 1];
-		if (!this.lastBarr) {
-			barr.row = 1; //第一行
-			barr.x = this.canvas.width;
-			barr.y += this.lh * (barr.row - 1);
-			this.lastGroupFirstBarr = barr;
-		} else {
-			if (this.lastGroupFirstBarr.x + this.lastGroupFirstBarr.w + this.gap > this.canvas.width) { //如果当前列第一行超画布范围
-				barr.row = this.lastBarr.row + 1;
-				if (barr.row > this.rows) { //如果大于最大行数
-					//另起一列
-					barr.row = 1;
-					barr.x = this.canvas.width;
-					barr.y += this.lh * (barr.row - 1);
-					this.lastGroupFirstBarr = barr;
-				} else {
-					//将新生成的放在前一个的下一行
-					barr.x = this.canvas.width;
-					barr.y += this.lh * (barr.row - 1);
-				}
+    this.font = fontWeight + ' ' + fontSize + 'px ' + fontFamily
 
-			} else {
-				//另起一列
-				barr.row = 1;
-				barr.x = this.canvas.width;
-				barr.y += this.lh * (barr.row - 1);
-				this.lastGroupFirstBarr = barr;
-			}
-		}
-		this.pools.push(barr);
-	};
+    this.color = colors.sort(_shuffleFn)[_rnd(0, colors.length)]
+    this.shadowColor = showColors.sort(_shuffleFn)[_rnd(0, showColors.length)]
+    this.speed = Math.min(msg.length, 30) * (fontSize / 12) // 默认速度
+    this.w = 0 // 默认宽度
+    // 初始值，具体需要根据情况计算
+    this.x = 0
+    this.y = _rnd(0, 20)
 
+    this._timer = this._rafId = null
 
+    if (msg.indexOf('data:image') > -1) {
+      this.img = new Image()
+      this.imgMaxSizes = config.imgMaxSizes
+      this.img.onload = function () {
+        _this.ready = true
+        var s = this.width / this.height
+        _this.w = Math.min(this.width, _this.imgMaxSizes[0])
+        _this.h = Math.min(_this.w / s, _this.imgMaxSizes[1])
+        _this.w = _this.h * s
 
-	function Barrage(msg, config) {
-		if (!(this instanceof Barrage)) {
-			return new Barrage(msg);
-		}
-		var _this = this;
-		var colors = config.colors;
-		var showColors = config.showColors;
-		var fontFamilys = config.fontFamily;
-		var fontWeights = config.fontWeight;
-		var fontSizes = config.fontSizes;
+        _this.speed = Math.pow(_this.w + _this.h, 1 / 3) * 0.6
+        _this.move()
+      }
+      this.img.src = msg
+    } else {
+      this.msg = msg
+      this.move()
+    }
+  }
 
-		var fontWeight = fontWeights.sort(_shuffleFn)[_rnd(0, fontWeights.length)];
-		var fontSize = _rnd(fontSizes[0], fontSizes[1]);
-		if (msg.length < 3 && Math.random() < 0.1) {
-			fontSize = config.fontSizeBig;
-		}
-		var fontFamily = fontFamilys.sort(_shuffleFn)[_rnd(0, fontFamilys.length)];
+  Barrage.prototype.move = function () {
+    var _this = this
+    this.suspend()
+    // 文字走动
+    this.timer = setTimeout(function moveObj () {
+      _this.x -= _this.speed
+      // 判断是否走出画布左边
+      if (_this.x + _this.w < -10) {
+        _this.isOut = true // 打上出局标记
+      }
+      if (!_this.isOut) {
+        _this._rafId = _RAF(moveObj)
+      }
+    }, 30)
+  }
 
-		this.font = fontWeight + ' ' + fontSize + 'px ' + fontFamily;
+  Barrage.prototype.suspend = function () {
+    clearTimeout(this._timer)
+    _CAF(this._rafId)
+  }
 
-		this.color = colors.sort(_shuffleFn)[_rnd(0, colors.length)];
-		this.shadowColor = showColors.sort(_shuffleFn)[_rnd(0, showColors.length)];
-		this.speed = Math.min(msg.length, 30) * (fontSize / 12); //默认速度
-		this.w = 0; //默认宽度
-		//初始值，具体需要根据情况计算
-		this.x = 0;
-		this.y = _rnd(0, 20);
+  Barrage.prototype.draw = function (gd) {
+    gd.save()
 
-		this._timer = this._rafId = null;
+    if (this.img) {
+      if (this.ready) {
+        gd.globalAlpha = 0.9
+        gd.drawImage(this.img, this.x, this.y, this.w, this.h)
+      }
+    } else if (this.msg) {
+      gd.font = this.font
+      gd.fillStyle = this.color
+      gd.shadowOffsetX = 1
+      gd.shadowOffsetY = 1
+      gd.shadowColor = this.shadowColor
+      gd.textBaseline = 'top'
+      gd.fillText(this.msg, this.x, this.y)
 
-		if (msg.indexOf('data:image') > -1) {
-			this.img = new Image();
-			this.imgMaxSizes = config.imgMaxSizes;
-			this.img.onload = function() {
-				_this.ready = true;
-				var s = this.width / this.height;
-				_this.w = Math.min(this.width, _this.imgMaxSizes[0]);
-				_this.h = Math.min(_this.w / s, _this.imgMaxSizes[1]);
-				_this.w = _this.h * s;
+      if (this.w <= 0) { // 只有在画布环境下才能确定文字尺寸
+        this.w = gd.measureText(this.msg).width
+        this.speed = Math.pow(this.w, 1 / 3) * 0.6
+      }
+    }
 
+    gd.restore()
+  }
 
-				_this.speed = Math.pow(_this.w + _this.h, 1 / 3) * 0.6;
-				_this.move();
-			};
-			this.img.src = msg;
-		} else {
-			this.msg = msg;
-			this.move();
-		}
-
-	}
-
-	Barrage.prototype.move = function() {
-		var _this = this;
-		this.suspend();
-		//文字走动
-		this.timer = setTimeout(function moveObj() {
-			_this.x -= _this.speed;
-			//判断是否走出画布左边
-			if (_this.x + _this.w < -10) {
-				_this.isOut = true; //打上出局标记
-			}
-			if (!_this.isOut) {
-				_this._rafId = _RAF(moveObj);
-			}
-		}, 30);
-	};
-
-	Barrage.prototype.suspend = function() {
-		clearTimeout(this._timer);
-		_CAF(this._rafId);
-	};
-
-	Barrage.prototype.draw = function(gd) {
-		gd.save();
-
-		if (this.img) {
-			if (this.ready) {
-				gd.globalAlpha = 0.9;
-				gd.drawImage(this.img, this.x, this.y, this.w, this.h);
-			}
-
-		} else if (this.msg) {
-			gd.font = this.font;
-			gd.fillStyle = this.color;
-			gd.shadowOffsetX = 1;
-			gd.shadowOffsetY = 1;
-			gd.shadowColor = this.shadowColor;
-			gd.textBaseline = 'top';
-			gd.fillText(this.msg, this.x, this.y);
-
-			if (this.w <= 0) { //只有在画布环境下才能确定文字尺寸
-				this.w = gd.measureText(this.msg).width;
-				this.speed = Math.pow(this.w, 1 / 3) * 0.6;
-			}
-		}
-
-		gd.restore();
-	};
-
-
-	exports.Danmoo = Danmoo;
-
-})(window);
+  exports.Danmoo = Danmoo
+})(window)
