@@ -11,4 +11,4 @@
 
 好玩不任性。<a href="http://demo.html5cc.com/danmoo/" target="_blank">这里有Demo</a>。
 
-![Danmoo](http://7xq3n7.com1.z0.glb.clouddn.com/danmoo.gif)
+![Danmoo](http://img.html5cc.com/danmoo.gif)
